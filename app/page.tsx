@@ -1,72 +1,90 @@
-"use client"; // Απαραίτητο για να δουλεύουν τα κουμπιά
+"use client";
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
-export default function Home() {
-  const router = useRouter();
+// Σύνδεση με το Supabase χρησιμοποιώντας τα κλειδιά από το .env.local
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-  const handleSearch = () => {
-    // Στέλνουμε τον χρήστη στη σελίδα results
-    router.push('/results');
-  };
+export default function Results() {
+  const [tires, setTires] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTires() {
+      const { data, error } = await supabase
+        .from('tires')
+        .select('*');
+      
+      if (error) {
+        console.error('Σφάλμα:', error);
+      } else {
+        setTires(data || []);
+      }
+      setLoading(false);
+    }
+
+    fetchTires();
+  }, []);
+
+  if (loading) return <div className="p-10 text-center font-bold">Φόρτωση ελαστικών...</div>;
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <nav className="bg-slate-900 text-white p-4 shadow-md">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight">TIRE<span className="text-orange-500">EXPERT</span></h1>
-          <div className="space-x-6 hidden md:flex">
-            <a href="#" className="hover:text-orange-400 transition text-sm font-bold uppercase">Ελαστικά</a>
-            <a href="#" className="hover:text-orange-400 transition text-sm font-bold uppercase">Συνεργεία Αττικής</a>
-            <a href="#" className="hover:text-orange-400 transition text-sm font-bold uppercase">Επικοινωνία</a>
-          </div>
-        </div>
-      </nav>
+    <main className="min-h-screen bg-gray-100 p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-black text-slate-900 mb-8 uppercase tracking-tight">
+          Διαθέσιμα <span className="text-orange-500">Ελαστικά</span>
+        </h1>
 
-      <section className="bg-slate-800 py-20 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">
-            Βρείτε τα ιδανικά ελαστικά <br/> για το όχημά σας
-          </h2>
-          <p className="text-slate-300 mb-10 text-xl font-light">
-            Αποστολή σε όλη την Ελλάδα ή τοποθέτηση σε επιλεγμένα σημεία στην Αττική.
-          </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {tires.map((tire) => (
+            <div key={tire.id} className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 hover:shadow-2xl transition">
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <span className="text-xs font-black text-orange-500 uppercase tracking-widest">{tire.brand}</span>
+                    <h3 className="text-xl font-bold text-slate-800">{tire.model}</h3>
+                  </div>
+                  <div className="bg-slate-100 px-3 py-1 rounded-full text-sm font-bold text-slate-600">
+                    {tire.size_text}
+                  </div>
+                </div>
 
-          <div className="bg-white p-8 rounded-2xl shadow-2xl grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div className="flex flex-col text-left">
-              <label className="text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Πλάτος</label>
-              <select className="border-2 border-gray-100 p-3 rounded-xl focus:border-orange-500 outline-none cursor-pointer font-bold">
-                <option>225</option>
-                <option>205</option>
-                <option>195</option>
-              </select>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="flex items-center space-x-2 text-sm text-slate-600">
+                    <span>⛽ Καύσιμο: <span className="font-bold text-slate-900">{tire.fuel_efficiency}</span></span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-600">
+                    <span>🌧️ Βρεγμένο: <span className="font-bold text-slate-900">{tire.wet_grip}</span></span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-600">
+                    <span>☀️ {tire.season}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-slate-600">
+                    <span>🚗 {tire.vehicle_type}</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center pt-4 border-t border-gray-50">
+                  <span className="text-2xl font-black text-slate-900">{tire.price}€</span>
+                  <button className="bg-slate-900 text-white px-6 py-2 rounded-xl font-bold text-sm hover:bg-orange-500 transition">
+                    ΕΠΙΛΟΓΗ
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="flex flex-col text-left">
-              <label className="text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Προφίλ</label>
-              <select className="border-2 border-gray-100 p-3 rounded-xl focus:border-orange-500 outline-none cursor-pointer font-bold">
-                <option>45</option>
-                <option>55</option>
-                <option>65</option>
-              </select>
-            </div>
-            <div className="flex flex-col text-left">
-              <label className="text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Διάμετρος</label>
-              <select className="border-2 border-gray-100 p-3 rounded-xl focus:border-orange-500 outline-none cursor-pointer font-bold">
-                <option>R17</option>
-                <option>R16</option>
-                <option>R18</option>
-              </select>
-            </div>
-            <button 
-              onClick={handleSearch}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-black py-4 px-6 rounded-xl shadow-lg transform active:scale-95 transition-all text-sm uppercase tracking-wider"
-            >
-              ΑΝΑΖΗΤΗΣΗ
-            </button>
-          </div>
+          ))}
         </div>
-      </section>
+        
+        {tires.length === 0 && (
+          <div className="text-center py-20 bg-white rounded-3xl shadow-inner">
+            <p className="text-slate-400 font-medium">Δεν βρέθηκαν ελαστικά στη βάση δεδομένων.</p>
+          </div>
+        )}
+      </div>
     </main>
   );
 }
